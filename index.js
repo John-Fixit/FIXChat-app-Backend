@@ -10,6 +10,7 @@ const socket = require('socket.io')
 app.use(bodyParser.urlencoded({extended: true, limit: true}))
 app.use(bodyParser.json())
 app.use(cors())
+app.use(express.static(__dirname + "/build"))
 const MONGODB_URL = process.env.MONGODB_URL
 mongoose.connect(MONGODB_URL, (err)=>{
     if(err){
@@ -20,6 +21,10 @@ mongoose.connect(MONGODB_URL, (err)=>{
 })
 app.use('/auth', userRouter)
 app.use('/message', messageRouter)
+
+app.get('/*', (req, res)=>{
+    res.sendFile(__dirname + '/build/index.html')
+})
 const PORT = process.env.PORT
 const server = app.listen(PORT || 5000, ()=>{
     console.log(`app is listening on port: ${PORT}`);
