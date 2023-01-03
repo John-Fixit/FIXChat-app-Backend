@@ -15,7 +15,6 @@ const register = (req, res)=>{
         res.json({message:`Internal server error!`, status: false});
     }else{
         if(result){
-            console.log(`username already exist`);
             res.json({message: `Username entered is already used`, status: false})
         }else{
             userModel.findOne({'email': email}, (err, result)=>{
