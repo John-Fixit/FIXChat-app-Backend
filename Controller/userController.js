@@ -1,12 +1,25 @@
 const { userModel } = require("../Model/userModel");
 const jwt = require('jsonwebtoken')
 const cloudinary = require('cloudinary')
+const nodemailer = require("nodemailer")
+const _ = require("lodash")
 require('dotenv').config()
 cloudinary.config({ 
     cloud_name: process.env.CLOUD_NAME, 
     api_key: process.env.API_KEY,
     api_secret: process.env.API_SECRET 
   });
+
+  var transporter = nodemailer.createTransport({
+    service: 'smtp@gmail.com',
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD
+    }
+});
 const register = (req, res)=>{
    const {username, email, password, profile_picture} = req.body;
 
@@ -25,7 +38,7 @@ const register = (req, res)=>{
                         res.json({message: `Email entered is already used`, status: false})
                     }
                     else{
-                        const form = new userModel({username, email, password, profile_picture})
+                        const form = new userModel({username, email, password, profile_picture, resetLink: ""})
                         form.save((err)=>{
                             if(err){
                                 res.json({message: `Internal server error, please check your connection`, status: false})
@@ -123,4 +136,82 @@ const uploadPhoto =(req, res)=>{
     })
 
 }
-module.exports = {register, login, chatHome, allUsers, uploadPhoto}
+
+const forgotPassword=(req, res)=>{
+    const {email} = req.body
+    userModel.findOne({email}, (err, user)=>{
+        if(err){
+            res.status(500).send({message: 'Internal server error!', status: false})
+        }
+        else{
+            if(!user){
+            res.status(200).send({message: 'User with this email does not exist!', status: false})
+            }
+            else{
+                const token = jwt.sign({_id: user._id}, process.env.RESET_PASSWORD_KEY, {expiresIn: '20m'})
+                const mailMessage = {
+                    from: "noreply@example.com",
+                    to: email,
+                    subject: "Account Activation Link",
+                    html: `<h2>Please click on the given link to reset your password</h2>
+                    <p>${process.env.CLIENT_URL}/reset_password/${token}</p>
+                    `
+                }
+
+                return user.updateOne({resetLink: token}, (err, success)=>{
+                        if(err){
+                            res.status(500).send({message: "Reset password link error", status: false})
+                        }
+                        else{
+                            transporter.sendMail(mailMessage, (err, bodyDetail)=>{
+                                if(err){
+                                    res.status(500).send({message: "Internal server error", status: false})
+                                }
+                                else{
+                                    res.status(200).send({message: "Verification link to reset your password has been sent to the email you entered, Kindly follow the instructions, the link will expire in the next 20minutes", status: true})
+                                }
+                            })
+                        }
+                })
+            }
+        }
+
+    })
+}
+const resetPassword =(req, res)=>{
+    const { resetLink, newPassword } = req.body
+    if(resetLink){
+            jwt.verify(resetLink, process.env.RESET_PASSWORD_KEY, (err, decoded)=>{
+                if(err){
+                    console.log(err)
+                    res.status(200).send({message: "Incorrect token or it has been expired", status: false})
+                }
+                else{
+                    userModel.findOne({resetLink}, (err, data)=>{
+                        if(err){
+                            res.status(500).send({message: "Internal server error", status: false})
+                        }
+                        else{
+                            const obj = {password: newPassword, resetLink: ""}
+                            const user = _.extend(data, obj)
+                            user.save((err)=>{
+                                if(err){
+                                    res.status(400).json({message: `Internal server error, please check your connection`, status: false})
+                                }else{
+                                    res.status(200).json({message: `Your password has been updated successfully, proceed to login with your new password`, status: true})
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+    }
+    else{
+        res.status(401).send({message: "Unexpected error, please check your email to activate", status: false})
+    }
+}
+
+//using mailgun-js to send email
+//what is express jwt
+//install lodash
+module.exports = {register, login, chatHome, allUsers, uploadPhoto, forgotPassword, resetPassword}

@@ -9,7 +9,10 @@ const mongoose = require('mongoose')
 const socket = require('socket.io')
 app.use(bodyParser.urlencoded({extended: true, limit: true}))
 app.use(bodyParser.json())
-app.use(cors())
+app.use(cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT"],
+}))
 app.use(express.static(__dirname + "/build"))
 const MONGODB_URL = process.env.MONGODB_URL
 mongoose.connect(MONGODB_URL, (err)=>{

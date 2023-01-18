@@ -18,8 +18,12 @@ const userSchema = new mongoose.Schema({
     },
     profile_picture: {
         type: String
+    },
+    resetLink: {
+        type: String,
+        default: ""
     }
-})
+}, {timestamps: true})
 
 let saltRound = 10;
 userSchema.pre('save', function(next){
