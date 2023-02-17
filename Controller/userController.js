@@ -183,7 +183,6 @@ const resetPassword =(req, res)=>{
     if(resetLink){
             jwt.verify(resetLink, process.env.RESET_PASSWORD_KEY, (err, decoded)=>{
                 if(err){
-                    console.log(err)
                     res.status(200).send({message: "Incorrect token or it has been expired", status: false})
                 }
                 else{
@@ -196,7 +195,7 @@ const resetPassword =(req, res)=>{
                             const user = _.extend(data, obj)
                             user.save((err)=>{
                                 if(err){
-                                    res.status(400).json({message: `Internal server error, please check your connection`, status: false})
+                                    res.status(500).json({message: `Internal server error, please check your connection`, status: false})
                                 }else{
                                     res.status(200).json({message: `Your password has been updated successfully, proceed to login with your new password`, status: true})
                                 }
@@ -210,6 +209,7 @@ const resetPassword =(req, res)=>{
         res.status(401).send({message: "Unexpected error, please check your email to activate", status: false})
     }
 }
+
 
 //using mailgun-js to send email
 //what is express jwt

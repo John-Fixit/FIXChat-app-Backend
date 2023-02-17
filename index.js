@@ -10,7 +10,8 @@ const socket = require('socket.io')
 app.use(bodyParser.urlencoded({extended: true, limit: true}))
 app.use(bodyParser.json())
 app.use(cors({
-    origin: "http://localhost:3000",
+    // origin: process.env.CLIENT_URL,
+    origin: "*",
     methods: ["GET", "POST", "PUT"],
 }))
 app.use(express.static(__dirname + "/build"))
