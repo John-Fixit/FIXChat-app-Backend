@@ -12,7 +12,7 @@ app.use(bodyParser.json())
 app.use(cors({
     // origin: process.env.CLIENT_URL,
     origin: "*",
-    methods: ["GET", "POST", "PUT"],
+    methods: ["GET", "POST"],
 }))
 app.use(express.static(__dirname + "/build"))
 const MONGODB_URL = process.env.MONGODB_URL
@@ -47,7 +47,6 @@ io.on("connection", (socket)=>{
 
     socket.on("send-msg", (data)=>{
         const sendUserSocket = onlineUsers.get(data.to)
-        console.log(data);
         if(sendUserSocket){
             socket.to(sendUserSocket).emit("msg-recieve", {msg:data.msg, time: data.time})
         }

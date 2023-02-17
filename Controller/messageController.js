@@ -24,7 +24,6 @@ const getallMessage=(req, res)=>{
     }, (err, result)=>{
         if(!err){
             const projectMessages = result.map((msg)=>{
-                console.log(msg.createdAt)
                 return {
                     fromSelf: msg.sender.toString() === from,
                     message: msg.message.text,
